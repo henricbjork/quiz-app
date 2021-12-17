@@ -1,52 +1,71 @@
+import './index.css';
+
 import React, { useState } from 'react';
 import fetchQuizQuestions, { Difficulty, QuestionState } from './API';
 
 import QuestionCard from './components/QuestionCard';
 
-const TOTAL_QUESTIONS: number = 3;
+const TOTAL_QUESTIONS: number = 2;
+
+const difficulties: { label: string; value: Difficulty }[] = [
+  { label: 'Easy', value: Difficulty.EASY },
+  { label: 'Medium', value: Difficulty.MEDIUM },
+  { label: 'Hard', value: Difficulty.HARD },
+];
 
 type AnswerObject = {
+  correctAnswer: string;
+  isCorrect: boolean;
   question: string;
   userAnswer: string;
-  isCorrect: boolean;
-  correctAnswer: string;
 };
 
 interface State {
+  currentQuestion: number;
+  activeDifficulty: Difficulty;
+  gameOver: boolean;
   loading: boolean;
   questions: QuestionState[];
-  currentQuestion: number;
-  userAnswers: AnswerObject[];
   score: number;
-  gameOver: boolean;
+  userAnswers: AnswerObject[];
 }
 
 const initialState = {
+  currentQuestion: 0,
+  activeDifficulty: Difficulty.UNDEFINED,
+  gameOver: true,
   loading: false,
   questions: [],
-  currentQuestion: 0,
-  userAnswers: [],
   score: 0,
-  gameOver: true,
+  userAnswers: [],
 };
 
 const App = () => {
   const [state, setState] = useState<State>(initialState);
-  const { loading, questions, currentQuestion, userAnswers, score, gameOver } =
-    state;
+  const {
+    activeDifficulty,
+    currentQuestion,
+    gameOver,
+    loading,
+    questions,
+    score,
+    userAnswers,
+  } = state;
 
-  const startTrivia = async () => {
+  console.log(activeDifficulty);
+  const startTrivia = async (difficulty: Difficulty) => {
     setState({ ...initialState, loading: true, gameOver: false });
 
     const newQuestions = await fetchQuizQuestions(
       TOTAL_QUESTIONS,
-      Difficulty.EASY
+      activeDifficulty
     );
 
     setState((prevState: State) => ({
       ...prevState,
       loading: false,
       questions: newQuestions,
+      activeDifficulty: difficulty,
     }));
   };
 
@@ -93,32 +112,70 @@ const App = () => {
     }
   };
 
-  const showStartButton = gameOver || userAnswers.length === TOTAL_QUESTIONS;
   const showNextQuestionButton =
     !gameOver &&
     !loading &&
     userAnswers.length === currentQuestion + 1 &&
     currentQuestion + 1 !== TOTAL_QUESTIONS;
+  const showRestartButton = userAnswers.length === TOTAL_QUESTIONS;
 
   return (
-    <div>
-      <h1>Quiz</h1>
-      {showStartButton && <button onClick={startTrivia}>Start</button>}
-      {!gameOver && <p>Score: {score}</p>}
+    <div className="h-screen flex flex-col justify-center items-center">
+      <h1 className="mb-6 text-5xl">Quiz</h1>
+      <p className="mb-6">Choose difficulty</p>
+      <div className="flex mb-6">
+        {difficulties.map((difficulty) => {
+          const isActive = activeDifficulty === difficulty.value;
+
+          return (
+            <button
+              className={`mr-4 last:mr-0 py-1 px-6 border-2 border-solid ${
+                isActive ? 'border-blue-500 text-blue-500' : 'border-black'
+              } hover:border-blue-500 hover:text-blue-500`}
+              onClick={() => {
+                startTrivia(difficulty.value);
+              }}
+            >
+              {difficulty.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {!gameOver && <p className="mb-6">Score: {score}</p>}
       {loading && <p>Loading questions...</p>}
-      {!loading && !gameOver && (
-        <QuestionCard
-          questionNumber={currentQuestion + 1}
-          totalQuestions={TOTAL_QUESTIONS}
-          question={questions[currentQuestion].question}
-          answers={questions[currentQuestion].answers}
-          userAnswer={userAnswers ? userAnswers[currentQuestion] : undefined}
-          callback={checkAnswer}
-        />
-      )}
-      {showNextQuestionButton && (
-        <button onClick={nextQuestion}>Next question</button>
-      )}
+      <div className="text-center min-h-[500px]">
+        {!loading && !gameOver && (
+          <QuestionCard
+            questionNumber={currentQuestion + 1}
+            totalQuestions={TOTAL_QUESTIONS}
+            question={questions[currentQuestion].question}
+            answers={questions[currentQuestion].answers}
+            userAnswer={userAnswers ? userAnswers[currentQuestion] : undefined}
+            callback={checkAnswer}
+          />
+        )}
+
+        {showNextQuestionButton && (
+          <button
+            className="mt-3 py-1 px-6 border-2 border-solid border-black hover:border-blue-500 hover:text-blue-500"
+            onClick={nextQuestion}
+          >
+            Next question
+          </button>
+        )}
+        {showRestartButton && (
+          <>
+            <p className="mb-4 mt-2 text-xl">Total score: {score}</p>
+            <button
+              className="py-1 px-6 border-2 border-solid border-black hover:border-blue-500 hover:text-blue-500"
+              onClick={() => startTrivia(activeDifficulty)}
+            >
+              Play again
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };
