@@ -114,7 +114,6 @@ const App = () => {
       }));
     }
   };
-  console.log(totalQuestions);
 
   const showNextQuestionButton =
     !gameOver &&
