@@ -55,7 +55,6 @@ const App = () => {
     userAnswers,
   } = state;
 
-  console.log(activeDifficulty);
   const startTrivia = async (difficulty: Difficulty) => {
     setState((prevState) => ({ ...prevState, loading: true, gameOver: false }));
 
