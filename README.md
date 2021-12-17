@@ -3,7 +3,7 @@ Made to learn TypeScript and to try out Tailwind CSS
 
 ## How to try
 - Clone repository
-- Run NPM install && NPM start in terminal
+- Run npm install && npm start in terminal
 
 ## Made with
 - React
